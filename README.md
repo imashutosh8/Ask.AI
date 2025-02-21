@@ -11,7 +11,6 @@ Ask.AI is a sleek and modern AI-powered chatbot with a ChatGPT-like interface, b
 ✅ Dark Mode Interface 🌙
 
 
-
 ✅ Sleek, Modern UI with Rounded Inputs & Buttons 🖌️
 
 
