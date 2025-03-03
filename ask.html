@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask.AI - Dark Mode</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Dark Mode Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 600px; /* Increased width */
+            background: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+            overflow: hidden;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            font-size: 15px;
+        }
+        .user-message {
+            background-color: #4caf50;
+            align-self: flex-end;
+            color: white;
+        }
+        .bot-message {
+            background-color: #333;
+            align-self: flex-start;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            font-style: italic;
+            color: #bbb;
+        }
+        .input-area {
+            display: flex;
+            padding: 12px;
+            border-top: 1px solid #333;
+            background: #1e1e1e;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #444;
+            background: #252525;
+            color: white;
+            border-radius: 5px;
+            outline: none;
+            font-size: 14px;
+        }
+        button {
+            margin-left: 12px;
+            padding: 12px;
+            border: none;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        ::placeholder {
+            color: #bbb;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .chat-container {
+                max-width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+            .chat-box {
+                padding: 15px;
+            }
+            .message {
+                font-size: 14px;
+                padding: 10px;
+            }
+            input, button {
+                font-size: 13px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Ask something..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const inputField = document.getElementById("userInput");
+            const chatBox = document.getElementById("chatBox");
+            let userMessage = inputField.value.trim();
+            if (!userMessage) return;
+
+            // Display user message
+            displayMessage(userMessage, "user-message");
+            inputField.value = "";
+
+            // Show loading indicator
+            let loadingDiv = document.createElement("div");
+            loadingDiv.className = "message bot-message loading";
+            loadingDiv.textContent = "Thinking...";
+            chatBox.appendChild(loadingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer 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",
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "mistralai/mistral-7b-instruct:free",
+                        messages: [{ role: 'user', content: userMessage }],
+                    }),
+                });
+
+                const data = await response.json();
+                let botReply = data.choices?.[0]?.message?.content || "I couldn't understand that.";
+                chatBox.removeChild(loadingDiv); // Remove loading indicator
+                displayMessage(botReply, "bot-message");
+            } catch (error) {
+                chatBox.removeChild(loadingDiv);
+                displayMessage("Error: " + error.message, "bot-message");
+            }
+        }
+
+        function displayMessage(text, className) {
+            const chatBox = document.getElementById("chatBox");
+            let messageDiv = document.createElement("div");
+            messageDiv.className = "message " + className;
+            messageDiv.innerHTML = marked.parse(text);
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    </script>
+
+</body>
+</html>
